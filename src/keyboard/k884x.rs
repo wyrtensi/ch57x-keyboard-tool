@@ -208,10 +208,6 @@ impl Keyboard for Keyboard884x {
 
         Ok(())
     }
-
-    fn preferred_endpoint() -> u8 {
-        0x04
-    }
 }
 
 impl Keyboard884x {

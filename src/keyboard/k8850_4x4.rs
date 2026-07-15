@@ -107,10 +107,6 @@ impl Keyboard for Keyboard8850_4x4 {
                help you reverse-engineer it."
         )
     }
-
-    fn preferred_endpoint() -> u8 {
-        0x04
-    }
 }
 
 impl Keyboard8850_4x4 {

@@ -5,7 +5,7 @@ mod parse;
 
 use std::io::{BufReader, Read, StdinLock};
 
-use crate::config::{Config, KeyboardModel};
+use crate::config::{Config, KeyboardModel, DeviceInfo};
 use crate::keyboard::{
     k884x, k8890, k8850_4x4, Keyboard, KnobAction, MediaCode, Modifier,
     WellKnownCode,
@@ -214,26 +214,18 @@ fn open_device(
     configured_model: Option<KeyboardModel>,
 ) -> Result<(DeviceHandle<Context>, u8, KeyboardModel)> {
     // Find USB device based on the configured model or product id
-    let (device, desc, model) = find_device(devel_options, configured_model).context("find USB device")?;
+    let (device, desc, info) = find_device(devel_options, configured_model).context("find USB device")?;
 
     ensure!(
         desc.num_configurations() == 1,
         "only one device configuration is expected"
     );
 
-    let preferred_endpoint = match model {
-        KeyboardModel::Ch57x_1 => {
-            k884x::Keyboard884x::preferred_endpoint()
-        }
-        KeyboardModel::Ch57x_2 => k8890::Keyboard8890::preferred_endpoint(),
-        KeyboardModel::Ch57x_3 => k8850_4x4::Keyboard8850_4x4::preferred_endpoint(),
-    };
-
     // Find correct endpoint
     let (intf_num, endpt_addr) = find_interface_and_endpoint(
         &device,
         devel_options.interface_number,
-        devel_options.endpoint_address.unwrap_or(preferred_endpoint),
+        devel_options.endpoint_address.unwrap_or(info.preferred_endpoint),
     )?;
 
     // Open device.
@@ -246,7 +238,7 @@ fn open_device(
     // Initialize device.
     send_to_device(&handle, endpt_addr, &[0u8; 64])?;
 
-    Ok((handle, endpt_addr, model))
+    Ok((handle, endpt_addr, info.model))
 }
 
 fn create_driver(model: KeyboardModel, buttons: u8, knobs: u8) -> Result<Box<dyn Keyboard>> {
@@ -267,7 +259,7 @@ fn create_driver(model: KeyboardModel, buttons: u8, knobs: u8) -> Result<Box<dyn
 fn find_device(
     devel_options: &DevelOptions,
     configured_model: Option<KeyboardModel>,
-) -> Result<(Device<Context>, DeviceDescriptor, KeyboardModel)> {
+) -> Result<(Device<Context>, DeviceDescriptor, DeviceInfo)> {
     let options = vec![
         #[cfg(windows)] rusb::UsbOption::use_usbdk(),
     ];
@@ -329,7 +321,12 @@ fn find_device(
                 continue;
             }
 
-            vec![model]
+            vec![model.device_info(device_vid, device_pid).ok_or_else(|| anyhow!(
+                "No known preferred endpoint for device {:04x}:{:04x}. \
+                 Use --endpoint-address to specify it.",
+                device_vid,
+                device_pid
+            ))?]
         } else {
             let models = KeyboardModel::from_vid_pid(desc.vendor_id(), desc.product_id());
             if models.is_empty() {
@@ -358,7 +355,7 @@ fn find_device(
                 * or provide `--model` argument for 'led' command
                 Possible values inferred from product ID: {}
                 If you are not sure which model to use, just try each and find one which works.
-            "}, models.iter().map(|model| format!("{model}")).join("\n")))
+            "}, models.iter().map(|info| format!("{}", info.model)).join("\n")))
         }
         _ => {
             Err(anyhow!(indoc! {"

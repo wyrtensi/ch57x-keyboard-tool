@@ -73,10 +73,6 @@ impl Keyboard for Keyboard8890 {
         send_message(output, &[0x03, 0xaa, 0xa1, 0, 0, 0, 0, 0, 0]);
         Ok(())
     }
-
-    fn preferred_endpoint() -> u8 {
-        0x02
-    }
 }
 
 impl Keyboard8890 {

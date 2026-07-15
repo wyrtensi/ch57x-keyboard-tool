@@ -68,30 +68,49 @@ pub enum KeyboardModel {
     Ch57x_3,
 }
 
-const SUPPORTED_DEVICES: &[(KeyboardModel, u16, u16)] = &[
-    (KeyboardModel::Ch57x_1, 0x1189, 0x8840),
-    (KeyboardModel::Ch57x_1, 0x1189, 0x8842),
-    (KeyboardModel::Ch57x_1, 0x1189, 0x8850),
-    (KeyboardModel::Ch57x_2, 0x1189, 0x8890),
-    (KeyboardModel::Ch57x_3, 0x514c, 0x8850),
-    (KeyboardModel::Ch57x_1, 0x514c, 0x8851),
+#[derive(Debug, Clone, Copy)]
+pub struct DeviceInfo {
+    pub model: KeyboardModel,
+    pub preferred_endpoint: u8,
+}
+
+const SUPPORTED_DEVICES: &[(KeyboardModel, u16, u16, u8)] = &[
+    (KeyboardModel::Ch57x_1, 0x1189, 0x8840, 0x04),
+    (KeyboardModel::Ch57x_1, 0x1189, 0x8842, 0x04),
+    (KeyboardModel::Ch57x_1, 0x1189, 0x8850, 0x04),
+    (KeyboardModel::Ch57x_1, 0x514c, 0x8851, 0x02),
+    (KeyboardModel::Ch57x_2, 0x1189, 0x8890, 0x02),
+    (KeyboardModel::Ch57x_3, 0x514c, 0x8850, 0x04),
 ];
 
 impl KeyboardModel {
     pub fn supported_vid_pid(self) -> Vec<(u16, u16)> {
         SUPPORTED_DEVICES
             .iter()
-            .filter(|(model, _, _)| *model == self)
-            .map(|(_, vid, pid)| (*vid, *pid))
+            .filter(|(model, _, _, _)| *model == self)
+            .map(|(_, vid, pid, _)| (*vid, *pid))
             .collect()
     }
 
-    pub fn from_vid_pid(vendor_id: u16, product_id: u16) -> Vec<Self> {
+    pub fn from_vid_pid(vendor_id: u16, product_id: u16) -> Vec<DeviceInfo> {
         SUPPORTED_DEVICES
             .iter()
-            .filter(|(_, vid, pid)| *vid == vendor_id && *pid == product_id)
-            .map(|(model, _, _)| *model)
+            .filter(|(_, vid, pid, _)| *vid == vendor_id && *pid == product_id)
+            .map(|(model, _, _, endpoint)| DeviceInfo {
+                model: *model,
+                preferred_endpoint: *endpoint,
+            })
             .collect()
+    }
+
+    pub fn device_info(self, vendor_id: u16, product_id: u16) -> Option<DeviceInfo> {
+        SUPPORTED_DEVICES
+            .iter()
+            .find(|(model, vid, pid, _)| *model == self && *vid == vendor_id && *pid == product_id)
+            .map(|(_, _, _, endpoint)| DeviceInfo {
+                model: self,
+                preferred_endpoint: *endpoint,
+            })
     }
 }
 

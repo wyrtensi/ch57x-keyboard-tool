@@ -17,8 +17,6 @@ use itertools::Itertools as _;
 pub trait Keyboard {
     fn bind_key(&self, layer: u8, key: Key, expansion: &Macro, output: &mut Vec<u8>) -> Result<()>;
     fn set_led(&mut self, args: &[String], output: &mut Vec<u8>) -> Result<()>;
-
-    fn preferred_endpoint() -> u8 where Self: Sized;
 }
 
 /// Helper function to send a message by appending it to the output buffer
