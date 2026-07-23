@@ -1,0 +1,24 @@
+model: ch57x-2
+orientation: counterclockwise
+rows: 3
+columns: 4
+knobs: 2
+
+# With the knobs at the top: left knob = zoom, right knob = volume.
+# All three hardware layers use the same mapping.
+layers:
+  - &numpad_layer
+    buttons:
+      - ["numpad7", "numpad8", "numpad9"]
+      - ["numpad4", "numpad5", "numpad6"]
+      - ["numpad1", "numpad2", "numpad3"]
+      - ["numpad0", "numpaddot", "numpadenter"]
+    knobs:
+      - ccw: "ctrl-wheel(-1)"
+        press: "ctrl-0"
+        cw: "ctrl-wheel(1)"
+      - ccw: "volumedown"
+        press: "mute"
+        cw: "volumeup"
+  - *numpad_layer
+  - *numpad_layer
