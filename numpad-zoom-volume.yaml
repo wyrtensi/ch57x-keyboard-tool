@@ -15,7 +15,7 @@ layers:
       - ["numpad0", "numpaddot", "numpadenter"]
     knobs:
       - ccw: "ctrl-wheel(-1)"
-        press: "ctrl-0"
+        press: "numlock"
         cw: "ctrl-wheel(1)"
       - ccw: "volumedown"
         press: "mute"
