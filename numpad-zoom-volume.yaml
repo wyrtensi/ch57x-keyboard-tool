@@ -18,7 +18,7 @@ layers:
         press: "numlock"
         cw: "ctrl-wheel(1)"
       - ccw: "volumedown"
-        press: "f24"
+        press: "ctrl-alt-shift-f12"
         cw: "volumeup"
   - *numpad_layer
   - *numpad_layer
